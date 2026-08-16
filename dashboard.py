@@ -77,25 +77,4 @@ with connect() as conn:
     approvals = pd.read_sql_query("SELECT a.id,d.name,a.action_type,a.proposed_action,a.status,a.created_at FROM approvals a JOIN deals d ON d.id=a.deal_id ORDER BY a.id DESC", conn)
 if not approvals.empty:
     st.dataframe(approvals, use_container_width=True, hide_index=True)
-from seed import DEALS
-from scoring import calculate_score, grade
-init_db()
-with connect() as conn:
-    count = conn.execute("SELECT COUNT(*) FROM deals").fetchone()[0]
 
-    if count == 0:
-        for d in DEALS:
-            d = d.copy()
-            s = calculate_score(d)
-            d["score"] = s
-            d["grade"] = grade(s)
-
-            cols = ",".join(d.keys())
-            qs = ",".join(["?"] * len(d))
-
-            conn.execute(
-                f"INSERT INTO deals ({cols}) VALUES ({qs})",
-                tuple(d.values())
-            )
-
-        conn.commit()
