@@ -4,32 +4,13 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 import streamlit as st
 import pandas as pd
 from db import init_db, connect
-from seed import DEALS
-from scoring import calculate_score, grade
+
 from run_agent import main as run_live_agent
 import asyncio
 st.set_page_config(page_title="Sight Acre Deal Centre", layout="wide")
 init_db()
 
-with connect() as conn:
-    count = conn.execute("SELECT COUNT(*) FROM deals").fetchone()[0]
 
-    if count == 0:
-        for d in DEALS:
-            d = d.copy()
-            s = calculate_score(d)
-            d["score"] = s
-            d["grade"] = grade(s)
-
-            cols = ",".join(d.keys())
-            qs = ",".join(["?"] * len(d))
-
-            conn.execute(
-                f"INSERT INTO deals ({cols}) VALUES ({qs})",
-                tuple(d.values())
-            )
-
-        conn.commit()
 
 st.title("Sight Acre Deal Centre")
 st.caption("AI deal sourcing • research • scoring • red flags • human-approved outreach")
