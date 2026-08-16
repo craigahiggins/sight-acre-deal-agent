@@ -6,7 +6,8 @@ import pandas as pd
 from db import init_db, connect
 from seed import DEALS
 from scoring import calculate_score, grade
-
+from run_agent import main as run_live_agent
+import asyncio
 st.set_page_config(page_title="Sight Acre Deal Centre", layout="wide")
 init_db()
 
@@ -32,7 +33,21 @@ with connect() as conn:
 
 st.title("Sight Acre Deal Centre")
 st.caption("AI deal sourcing • research • scoring • red flags • human-approved outreach")
+st.subheader("Live AI Deal Scout")
 
+search_mandate = st.text_input(
+    "Deal sourcing mandate",
+    value="Find one high-potential UK deal across leisure, modular construction, renewables, senior living or development land that appears worthy of deeper investigation. Use current public web information and do not invent facts."
+)
+
+if st.button("🔎 Run Live AI Scout", type="primary"):
+    with st.spinner("AI agents are searching, researching and analysing the market..."):
+        try:
+            asyncio.run(run_live_agent(search_mandate))
+            st.success("Live deal found and analysed. Refreshing Deal Centre...")
+            st.rerun()
+        except Exception as e:
+            st.error(f"Live scout error: {e}")
 with connect() as conn:
     df = pd.read_sql_query("SELECT * FROM deals ORDER BY score DESC", conn)
 
